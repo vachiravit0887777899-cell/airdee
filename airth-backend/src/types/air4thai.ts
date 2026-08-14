@@ -18,4 +18,8 @@ export interface Air4ThaiStation {
     SO2?: { color_id: string; aqi: string; value: string }
     AQI?: { color_id: string; aqi: string; param: string }
   }
-}ห
+}
+
+export interface Air4ThaiResponse {
+  stations: Air4ThaiStation[]
+}

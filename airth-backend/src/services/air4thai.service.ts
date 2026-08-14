@@ -5,13 +5,11 @@ import { findNearestIndex } from '../utils/geo'
 
 const AIR4THAI_URL = 'http://air4thai.pcd.go.th/services/getNewAQI_JSON.php'
 
-// เลี่ยงปัญหา SSL certificate verification จาก Antivirus/Firewall ที่ดักตรวจ HTTPS traffic
 const httpsAgent = new https.Agent({ rejectUnauthorized: false })
 
-// Cache ในหน่วยความจำ — ไม่ต้องยิง Air4Thai ทุก request (ตามที่ระบุใน CACHE)
 let cachedStations: Air4ThaiStation[] | null = null
 let cacheTimestamp = 0
-const CACHE_DURATION_MS = 15 * 60 * 1000 // 15 นาที
+const CACHE_DURATION_MS = 15 * 60 * 1000
 
 async function fetchAllStations(): Promise<Air4ThaiStation[]> {
   const now = Date.now()
@@ -38,9 +36,6 @@ export interface NearestStationResult {
   updatedAt: string
 }
 
-/**
- * หาสถานี Air4Thai ที่ใกล้พิกัดที่กำหนดที่สุด แล้วคืนค่า PM2.5/AQI
- */
 export async function getNearestStationData(
   lat: number,
   lng: number
@@ -95,10 +90,6 @@ export interface BulkAirQualityResult {
   aqi: number | null
 }
 
-/**
- * ดึงค่า PM2.5 ของหลายจังหวัดพร้อมกัน โดยยิง Air4Thai แค่ครั้งเดียว (ใช้ cache เดิม)
- * แล้ว loop จับคู่สถานีใกล้สุดให้แต่ละจังหวัด
- */
 export async function getBulkAirQuality(
   points: ProvincePoint[]
 ): Promise<BulkAirQualityResult[]> {
