@@ -16,6 +16,7 @@ let ctx: CanvasRenderingContext2D | null = null
 let drops: RainDrop[] = []
 let animationFrameId: number | null = null
 let prefersReducedMotion = false
+let resizeTimeoutId: number | null = null
 
 function resizeCanvas() {
   const canvas = canvasRef.value
@@ -55,9 +56,11 @@ function draw() {
 
 function startAnimation() {
   if (drops.length === 0) return
+  if (animationFrameId) return // ป้องกันสั่งซ้ำซ้อน
   if (prefersReducedMotion) {
     draw()
     if (animationFrameId) cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
     return
   }
   draw()
@@ -67,6 +70,22 @@ function stopAnimation() {
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId)
     animationFrameId = null
+  }
+}
+
+function handleResize() {
+  if (resizeTimeoutId) clearTimeout(resizeTimeoutId)
+  resizeTimeoutId = window.setTimeout(() => {
+    resizeCanvas()
+    initDrops()
+  }, 150)
+}
+
+function handleVisibilityChange() {
+  if (document.hidden) {
+    stopAnimation()
+  } else {
+    startAnimation()
   }
 }
 
@@ -81,11 +100,15 @@ onMounted(() => {
   initDrops()
   startAnimation()
 
-  window.addEventListener('resize', resizeCanvas)
+  window.addEventListener('resize', handleResize)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
 })
+
 onUnmounted(() => {
   stopAnimation()
-  window.removeEventListener('resize', resizeCanvas)
+  if (resizeTimeoutId) clearTimeout(resizeTimeoutId)
+  window.removeEventListener('resize', handleResize)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 watch(
@@ -102,7 +125,7 @@ watch(
   <canvas
     v-if="rainProbability >= 60"
     ref="canvasRef"
-    class="pointer-events-none absolute inset-0 z-[2]"
+    class="pointer-events-none fixed inset-0 z-[2]"
     aria-hidden="true"
   />
 </template>
