@@ -13,7 +13,6 @@ const isLoading = ref(true)
 const loadError = ref(false)
 
 const map = shallowRef<L.Map | null>(null)
-let geoLayer: L.GeoJSON | null = null
 
 function getPm25ById(data: BulkAirQualityItem[], id: string): number | null {
   const found = data.find((d) => d.provinceId === id)
@@ -42,7 +41,7 @@ async function initMap() {
       fetchAllAirQuality(),
     ])
 
-    geoLayer = L.geoJSON(geoRes, {
+    L.geoJSON(geoRes, {
       style: (feature) => {
         const provinceName = feature?.properties?.name ?? ''
         const provinceId = matchProvinceId(provinceName)
