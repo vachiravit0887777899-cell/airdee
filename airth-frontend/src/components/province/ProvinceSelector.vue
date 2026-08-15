@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { provinces, regionLabel, type Region } from '../../data/provinces'
 import ProvinceCard from './ProvinceCard.vue'
+import { fetchAllAirQuality, type BulkAirQualityItem } from '../../services/provinceService'
 
 const emit = defineEmits<{
   select: [id: string]
@@ -9,6 +10,8 @@ const emit = defineEmits<{
 }>()
 
 const searchQuery = ref('')
+const airDataMap = ref<Map<string, BulkAirQualityItem>>(new Map())
+const isLoadingData = ref(true)
 
 const regions: Region[] = ['north', 'northeast', 'central', 'east', 'west', 'south']
 
@@ -28,6 +31,21 @@ function handleSelect(id: string) {
   emit('select', id)
   emit('close')
 }
+
+onMounted(async () => {
+  try {
+    const data = await fetchAllAirQuality()
+    const map = new Map<string, BulkAirQualityItem>()
+    for (const item of data) {
+      map.set(item.provinceId, item)
+    }
+    airDataMap.value = map
+  } catch (err) {
+    console.error('Failed to load bulk air quality:', err)
+  } finally {
+    isLoadingData.value = false
+  }
+})
 </script>
 
 <template>
@@ -60,6 +78,10 @@ function handleSelect(id: string) {
         class="mt-4 w-full rounded-xl border border-glass-border bg-white/5 px-4 py-2 text-white placeholder-white/30 outline-none focus:border-aqi-good"
       />
 
+      <p v-if="isLoadingData" class="mt-4 text-xs text-white/40">
+        กำลังโหลดข้อมูลคุณภาพอากาศ...
+      </p>
+
       <div class="mt-6 max-h-[60vh] space-y-6 overflow-y-auto">
         <div v-for="region in regions" :key="region">
           <div v-if="provincesByRegion(region).length > 0">
@@ -71,6 +93,8 @@ function handleSelect(id: string) {
                 v-for="province in provincesByRegion(region)"
                 :key="province.id"
                 :province="province"
+                :pm25="airDataMap.get(province.id)?.pm25 ?? undefined"
+                :aqi="airDataMap.get(province.id)?.aqi ?? undefined"
                 @select="handleSelect"
               />
             </div>

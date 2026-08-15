@@ -59,8 +59,9 @@ onMounted(() => {
   loadProvince('bangkok')
 })
 </script>
+
 <template>
-<WeatherEnvironment :pm25="currentData.pm25" />
+  <WeatherEnvironment :pm25="currentData.pm25" />
   <DustParticleCanvas :pm25="currentData.pm25" />
   <RainCanvas :rainProbability="currentData.rainProbability" />
 
